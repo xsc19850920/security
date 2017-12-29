@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html layout:decorator="layout/layout">
+<head>
+<title>list</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" th:href="@{/bootstrap/css/uniform.css}" />
+<link rel="stylesheet" th:href="@{/bootstrap/css/select2.css}" />		
+<link rel="stylesheet" th:href="@{/bootstrap/css/unicorn.main.css}" />
+<link rel="stylesheet" th:href="@{/bootstrap/css/unicorn.grey.css}" class="skin-color" />	
+
+<script th:src="@{/bootstrap/js/bootstrap.min.js}"></script>
+<script th:src="@{/bootstrap/js/jquery.uniform.js}"></script>
+<script th:src="@{/bootstrap/js/select2.min.js}"></script>
+<script th:src="@{/bootstrap/js/jquery.dataTables.min.js}"></script>
+<script th:src="@{/bootstrap/js/unicorn.js}"></script>
+<script th:src="@{/bootstrap/js/unicorn.tables.js}"></script>
+<script th:src="@{/bootstrap/js/My97DatePicker/WdatePicker.js}"></script>
+<script>
+$(function(){
+	/*<![CDATA[*/
+	           
+	// === Sidebar navigation === //
+	$("#sidebar ul li.active").removeClass("active").addClass('submenu');
+	$("#sidebar ul li").eq(1).removeClass("submenu").addClass('active open');
+	
+	var table = $('.data-table').DataTable({
+			ajax : 'demos',
+			aoColumns : [ {
+				mDataProp : "id",
+				sTitle : "主键",
+				sDefaultContent : "", //此列默认值为""，以防数据中没有此值，DataTables加载数据的时候报错  
+				bSortable : false,
+				bVisible : false //此列不显示  
+			}, {
+				bSortable : false,
+				mDataProp : "name",
+				sTitle : "用户名",
+				sClass : "center"
+			}, {
+				mDataProp : "date",
+				sTitle : "日期",
+				sClass : "center"
+			} , {
+				sTitle : "操作",
+			} ],
+			columnDefs : [{
+				"targets" : [1],
+				"render" : function(data, type, full) {
+					return "<a href='demos/" + full.id + "'>" + full.name + "</a>";
+				}
+			} , {
+				"targets" : [3],
+				"searchable": false,
+				"render" : function(data, type, full) {
+					return "<input type='button' class='btn btn-danger btn-mini' value='删除' hiddenValue=" + full.id + "/>";
+					//return "<button class='btn btn-danger'><i class='icon-remove icon-white'></i> Delete</button>"
+					//return "<a href='demos/" + data + "'><i class='icon-remove'></i></a>";
+				}
+			} ]
+		});
+		$('.btn-danger').live('click',function(){
+			var id = $(this).attr('hiddenValue');
+			$(this).parent().parent().addClass(".selected");
+			 $.ajax({  
+		        type: 'POST',  
+		        url: 'demos/'+id,  
+		        data: {_method:'delete'},//'ids='+arr+'&_method=delete',  
+		        success: function(data){  
+		        	table.row('.selected').remove().draw( false );
+		        },  
+		        error: function(data){  
+		            alert(2);  
+		        }  
+	   		 });   
+		});
+		
+		
+		
+	$('#add-demo-submit').click(function() {
+		$.ajax( {
+			type : 'post',
+			contentType: "application/json;charset=utf-8",
+			url:'demos',
+			dataType:"json",
+			data: JSON.stringify({
+				"name" : $('input[name=name]').val(),
+				"date" : $('input[name=date]').val()
+			}),
+			success : function(r) {
+				$('input[name=name]').val('');
+				$('input[name=date]').val('');
+				$('.modal').modal('hide');
+				$('.data-table').DataTable().ajax.reload(); 
+			}
+			});
+		});
+		/*]]>*/
+	});
+</script>
+</head>
+<body>
+	<div layout:fragment="container" class="container-fluid">
+		<div class="row-fluid">
+			<div class="span12">
+				<div class="widget-box">
+					<div class="widget-title">
+						<span class="icon"><i class="icon-calendar"></i></span>
+						<h5>
+							Demos <a id="add-event" data-toggle="modal" href="#modal-add-event" class="btn btn-success btn-mini"><i class="icon-plus icon-white"></i> Add</a>
+						</h5>
+					</div>
+
+					<div class="widget-content nopadding">
+						<table class="table table-bordered data-table">
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<div class="modal hide in" id="modal-add-event" aria-hidden="false" style="display: none;">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">×</button>
+					<h3>Add a new Demo</h3>
+				</div>
+				<div class="modal-body">
+					<form action="demos" id="add-demo" method="post">
+						<p>
+							demo ame : <input name="name" type="text">
+						</p>
+						<p>
+							demo date : <input name="date" type="text" class="Wdate" id="d15" onFocus="WdatePicker({readOnly:true,dateFmt:'yyyy-MM-dd HH:mm:ss'})">
+						</p>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<a href="#" class="btn" data-dismiss="modal">Cancel</a> <a href="#" id="add-demo-submit" class="btn btn-primary">Add Demo</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
